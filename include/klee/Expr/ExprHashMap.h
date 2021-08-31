@@ -21,10 +21,22 @@ namespace klee {
     struct ExprHash  {
       unsigned operator()(const ref<Expr> &e) const { return e->hash(); }
     };
+
+  // NOTE: [liuzikai] add raw pointer compare
+    struct ExprPtrHash  {
+      auto operator()(const ref<Expr> &e) const { return std::hash<const Expr *>()(e.get()); }
+    };
     
     struct ExprCmp {
       bool operator()(const ref<Expr> &a, const ref<Expr> &b) const {
         return a==b;
+      }
+    };
+
+    // NOTE: [liuzikai] add raw pointer compare
+    struct ExprPrtCmp {
+      bool operator()(const ref<Expr> &a, const ref<Expr> &b) const {
+        return a.get() == b.get();
       }
     };
   }
@@ -33,6 +45,12 @@ namespace klee {
   class ExprHashMap
       : public std::unordered_map<ref<Expr>, T, klee::util::ExprHash,
                                   klee::util::ExprCmp> {};
+
+  // NOTE: [liuzikai] add a map using raw pointer compare
+  template <class T>
+  class ExprHashRawPtrMap
+: public std::unordered_map<ref<Expr>, T, klee::util::ExprPtrHash,
+                                  klee::util::ExprPrtCmp> {};
 
   typedef std::unordered_set<ref<Expr>, klee::util::ExprHash,
                              klee::util::ExprCmp>

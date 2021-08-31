@@ -29,22 +29,22 @@ namespace klee {
     Assignment(bool _allowFreeValues=false) 
       : allowFreeValues(_allowFreeValues) {}
     Assignment(const std::vector<const Array*> &objects,
-               std::vector< std::vector<unsigned char> > &values,
+               const std::vector< std::vector<unsigned char> > &values,
                bool _allowFreeValues=false) 
       : allowFreeValues(_allowFreeValues){
-      std::vector< std::vector<unsigned char> >::iterator valIt = 
+      std::vector< std::vector<unsigned char> >::const_iterator valIt =
         values.begin();
       for (std::vector<const Array*>::const_iterator it = objects.begin(),
              ie = objects.end(); it != ie; ++it) {
         const Array *os = *it;
-        std::vector<unsigned char> &arr = *valIt;
+        const std::vector<unsigned char> &arr = *valIt;
         bindings.insert(std::make_pair(os, arr));
         ++valIt;
       }
     }
     
     ref<Expr> evaluate(const Array *mo, unsigned index) const;
-    ref<Expr> evaluate(ref<Expr> e);
+    ref<Expr> evaluate(ref<Expr> e) const;
     ConstraintSet createConstraintsFromAssignment() const;
 
     template<typename InputIterator>
@@ -71,7 +71,11 @@ namespace klee {
     assert(array);
     bindings_ty::const_iterator it = bindings.find(array);
     if (it!=bindings.end() && index<it->second.size()) {
-      return ConstantExpr::alloc(it->second[index], array->getRange());
+        // NOTE: [liuzikai] support range size different than Int8 by combining bytes
+        unsigned wordSize = array->getRange() / 8;
+        unsigned long long value = 0;
+        for (unsigned k = 0; k < wordSize; k++) value |= (it->second[index * wordSize + k] << (8U * k));
+      return ConstantExpr::alloc(value, array->getRange());
     } else {
       if (allowFreeValues) {
         return ReadExpr::create(UpdateList(array, ref<UpdateNode>(nullptr)),
@@ -82,7 +86,7 @@ namespace klee {
     }
   }
 
-  inline ref<Expr> Assignment::evaluate(ref<Expr> e) { 
+  inline ref<Expr> Assignment::evaluate(ref<Expr> e) const {
     AssignmentEvaluator v(*this);
     return v.visit(e); 
   }

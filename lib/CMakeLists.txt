@@ -12,3 +12,5 @@ add_subdirectory(Expr)
 add_subdirectory(Solver)
 add_subdirectory(Module)
 add_subdirectory(Core)
+
+add_subdirectory(klc3)

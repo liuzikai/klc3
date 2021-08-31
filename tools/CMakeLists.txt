@@ -14,3 +14,8 @@ add_subdirectory(klee-replay)
 add_subdirectory(klee-stats)
 add_subdirectory(klee-zesti)
 add_subdirectory(ktest-tool)
+
+#add_subdirectory(lc3tools)
+add_subdirectory(lc3tools_release)
+add_subdirectory(klc3)
+add_subdirectory(klc3as)

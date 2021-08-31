@@ -148,13 +148,13 @@ ref<Expr> ExprOptimizer::optimizeExpr(const ref<Expr> &e, bool valueOnly) {
         }
         // Add new expression to cache
         if (result) {
-          klee_warning("OPT_I: successful");
+//          klee_warning("OPT_I: successful");
           cacheExprOptimized[e] = result;
         } else {
-          klee_warning("OPT_I: unsuccessful");
+//          klee_warning("OPT_I: unsuccessful");
         }
       } else {
-        klee_warning("OPT_I: unsuccessful");
+//        klee_warning("OPT_I: unsuccessful");
         cacheExprUnapplicable.insert(e);
       }
     }
@@ -176,11 +176,11 @@ ref<Expr> ExprOptimizer::optimizeExpr(const ref<Expr> &e, bool valueOnly) {
     ref<Expr> selectOpt =
         getSelectOptExpr(e, reads, readInfo, are.containsSymbolic());
     if (selectOpt) {
-      klee_warning("OPT_V: successful");
+//      klee_warning("OPT_V: successful");
       result = selectOpt;
       cacheExprOptimized[e] = result;
     } else {
-      klee_warning("OPT_V: unsuccessful");
+//      klee_warning("OPT_V: unsuccessful");
       cacheExprUnapplicable.insert(e);
     }
   }

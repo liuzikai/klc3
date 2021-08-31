@@ -7,6 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#define SKIP_FORKING_ON_READ_ONLY  1
+
 #include "Executor.h"
 
 #include "Context.h"
@@ -121,6 +123,16 @@ cl::opt<std::string> MaxTime(
              "Set to 0s to disable (default=0s)"),
     cl::init("0s"),
     cl::cat(TerminationCat));
+
+cl::opt<int> ForkOnSymAddrThreshold(
+        "max-sym-addr-fork",
+        cl::desc("With a memory access of a symbolic address whose "
+                 "number of possible concrete values is less than this limit, "
+                 "fork the state to make the address concrete. "
+                 "Set to 0 to disable. Set to -1 for unlimited. (default=0)"),
+        cl::init(0),
+        cl::cat(TerminationCat));
+
 } // namespace klee
 
 namespace {
@@ -4066,6 +4078,139 @@ void Executor::resolveExact(ExecutionState &state,
   }
 }
 
+bool Executor::forkOnRange(ExecutionState &state, const ref<Expr> &value, unsigned int minVal, unsigned int maxValue,
+                           std::vector<std::pair<ref<klee::ConstantExpr>, ExecutionState *>> &result,
+                           int maxPossibleValueCount) {
+
+    std::vector<std::pair<ref<ConstantExpr>, ref<Expr>>> possibleValues;
+    if (!evalPossibleValues(value, state, possibleValues, maxPossibleValueCount)) {
+        klee_warning_once(0, "forkOnRange exceeds maxPossibleValueCount");
+        return false;
+    }
+
+    for (unsigned i = 0; i < possibleValues.size(); i++) {
+        ExecutionState *t;
+        if (i != possibleValues.size() - 1) {
+            t = state.branch();
+            addedStates.push_back(t);
+            processTree->attach(state.ptreeNode, t, &state);
+        } else {
+            t = &state;
+        }
+        // Notice that s must be the last, or changes on it will be forked into other states
+        // If there is only one values, no need to add the Eq constraint since it must be true
+        if (possibleValues[i].second && possibleValues.size() != 1) {
+            addConstraint(*t, possibleValues[i].second);
+        }
+        result.emplace_back(possibleValues[i].first, t);
+    }
+    return true;
+}
+
+bool Executor::evalPossibleValues(const ref<Expr> &expr, ExecutionState &state,
+                                  std::vector<std::pair<ref<klee::ConstantExpr>, ref<Expr>>> &result,
+                                  int maxPossibleValueCount) {
+    auto range = solver->getRange(state.constraints, expr, state.queryMetaData);
+    return evalPossibleValuesInRange(expr, state,
+                                     dyn_cast<ConstantExpr>(range.first)->getZExtValue(),
+                                     dyn_cast<ConstantExpr>(range.second)->getZExtValue(),
+                                     result, maxPossibleValueCount);
+}
+
+bool Executor::evalPossibleValuesInRange(const ref<Expr> &expr, ExecutionState &state,
+                                         uint64_t minVal, uint64_t maxVal,
+                                         std::vector<std::pair<ref<klee::ConstantExpr>, ref<Expr>>> &result,
+                                         int maxPossibleValueCount) {
+
+    // NOTE: as we do arithmetic, minVal, maxVal and midVal below must be larger than uint16_t (and better to be signed)
+    bool res, success;
+    ref<Expr> c;
+
+    if (minVal > maxVal) {
+        return true;
+
+    } else if (maxVal - minVal <= 3) {
+
+        /**
+         * [0, 3] for example
+         * Direct Eq: 4 queries
+         * Fall back to else below, worse case: 6 queries
+         *   mid = 1
+         *   1) 0 <= expr <= 1? [0, 1]
+         *     2) expr == 0?
+         *     3) expr == 1?
+         *   4) 2 <= expr <= 3? [2, 3]
+         *     5) expr == 2?
+         *     6) expr == 3?
+         * Best case: 3 (half of the range is impossible, while the other must be possible or it will exit earlier)
+         *   1) 0 <= expr <= 1? No. Then 2 <= expr <= 3 must be true.
+         *   2) expr == 2?
+         *   3) expr == 3?
+         */
+
+        // TODO: overflow?
+        for (uint64_t val = minVal; val <= maxVal; val++) {
+            ref<ConstantExpr> v = ConstantExpr::alloc(val, expr->getWidth());
+            c = EqExpr::alloc(expr, v);
+            // TODO: optimizer
+            success = solver->mayBeTrue(state.constraints, c, res, state.queryMetaData);
+            assert(success && "Unhandled solver failure");
+            if (res) {
+                result.emplace_back(v, c);
+                if (maxPossibleValueCount != -1 && (int) result.size() > maxPossibleValueCount) return false;
+            }
+        }
+
+    } else {
+
+        uint64_t midVal = minVal + (maxVal - minVal) / 2;
+
+        // [minVal, midVal]
+        if (minVal == midVal) {
+            // Just query Eq
+            if (!evalPossibleValuesInRange(expr, state, minVal, midVal, result, maxPossibleValueCount)) return false;
+        } else {
+            // Check whether this half is possible
+            c = AndExpr::alloc(
+                    UleExpr::alloc(ConstantExpr::alloc(minVal, expr->getWidth()), expr),
+                    UleExpr::alloc(expr, ConstantExpr::alloc(midVal, expr->getWidth()))
+            );
+            // TODO: optimizer
+            success = solver->mayBeTrue(state.constraints, c, res, state.queryMetaData);
+            assert(success && "Unexpected solver failure");
+            if (res) {
+                if (!evalPossibleValuesInRange(expr, state, minVal, midVal, result, maxPossibleValueCount)) return false;
+            }
+        }
+
+        // [midVal + 1, maxVal]
+        if (midVal + 1 == maxVal) {
+            // Just query Eq
+            if (!evalPossibleValuesInRange(expr, state, midVal + 1, maxVal, result, maxPossibleValueCount)) return false;
+        } else {
+            if (!res) {
+                // The other half is not possible, then this half must be possible
+                res = true;
+            } else {
+                // Check whether this half is possible
+                c = AndExpr::alloc(
+                        UleExpr::alloc(ConstantExpr::alloc(midVal + 1, expr->getWidth()), expr),
+                        UleExpr::alloc(expr, ConstantExpr::alloc(maxVal, expr->getWidth()))
+                );
+                // TODO: optimizer
+                success = solver->mayBeTrue(state.constraints, c, res, state.queryMetaData);
+                assert(success && "Unexpected solver failure");
+            }
+            if (res) {
+                if (!evalPossibleValuesInRange(expr, state, midVal + 1, maxVal, result, maxPossibleValueCount)) return false;
+            }
+        }
+
+    }
+
+    return true;
+}
+
 void Executor::executeMemoryOperation(ExecutionState &state,
                                       bool isWrite,
                                       ref<Expr> address,
@@ -4123,16 +4268,47 @@ void Executor::executeMemoryOperation(ExecutionState &state,
           terminateStateOnError(state, "memory error: object read only",
                                 ReadOnly);
         } else {
-          ObjectState *wos = state.addressSpace.getWriteable(mo, os);
-          wos->write(offset, value);
+
+            std::vector<std::pair<ref<klee::ConstantExpr>, ExecutionState *>> forks;
+            if (ForkOnSymAddrThreshold == 0 ||
+                isa<ConstantExpr>(offset) ||
+                !forkOnRange(state, offset, 0, mo->size - bytes, forks, ForkOnSymAddrThreshold)) {
+
+                ObjectState *wos = state.addressSpace.getWriteable(mo, os);
+                wos->write(offset, value);
+
+            } else {
+                for (auto &it : forks) {
+                    ObjectState *wos = it.second->addressSpace.getWriteable(mo, os);
+                    wos->write(it.first, value);
+                }
+            }
         }          
       } else {
-        ref<Expr> result = os->read(offset, type);
-        
-        if (interpreterOpts.MakeConcreteSymbolic)
-          result = replaceReadWithSymbolic(state, result);
-        
-        bindLocal(target, state, result);
+
+          std::vector<std::pair<ref<klee::ConstantExpr>, ExecutionState *>> forks;
+          if (ForkOnSymAddrThreshold == 0 ||
+              isa<ConstantExpr>(offset) ||
+#if SKIP_FORKING_ON_READ_ONLY
+              os->readOnly /* readOnly arrays are likely to be lookup-table */ ||
+#endif
+              !forkOnRange(state, offset, 0, mo->size - bytes, forks, ForkOnSymAddrThreshold)) {
+              ref<Expr> result = os->read(offset, type);
+
+              if (interpreterOpts.MakeConcreteSymbolic)
+                  result = replaceReadWithSymbolic(state, result);
+
+              bindLocal(target, state, result);
+
+          } else {
+              for (auto &it : forks) {
+                  ref<Expr> result = os->read(it.first, type);
+                  if (interpreterOpts.MakeConcreteSymbolic)
+                      result = replaceReadWithSymbolic(*it.second, result);
+                  bindLocal(target, *it.second, result);
+              }
+          }
+
       }
 
       return;
@@ -4167,12 +4343,42 @@ void Executor::executeMemoryOperation(ExecutionState &state,
           terminateStateOnError(*bound, "memory error: object read only",
                                 ReadOnly);
         } else {
-          ObjectState *wos = bound->addressSpace.getWriteable(mo, os);
-          wos->write(mo->getOffsetExpr(address), value);
+
+            ref<Expr> offset = mo->getOffsetExpr(address);
+
+            std::vector<std::pair<ref<klee::ConstantExpr>, ExecutionState *>> forks;
+            if (ForkOnSymAddrThreshold == 0 ||
+                isa<ConstantExpr>(offset) ||
+                !forkOnRange(state, offset, 0, mo->size - bytes, forks, ForkOnSymAddrThreshold)) {
+
+                ObjectState *wos = bound->addressSpace.getWriteable(mo, os);
+                wos->write(offset, value);
+            } else {
+                for (auto &it : forks) {
+                    ObjectState *wos = it.second->addressSpace.getWriteable(mo, os);
+                    wos->write(it.first, value);
+                }
+            }
         }
       } else {
-        ref<Expr> result = os->read(mo->getOffsetExpr(address), type);
-        bindLocal(target, *bound, result);
+          ref<Expr> offset = mo->getOffsetExpr(address);
+
+          std::vector<std::pair<ref<klee::ConstantExpr>, ExecutionState *>> forks;
+          if (ForkOnSymAddrThreshold == 0 ||
+              isa<ConstantExpr>(offset) ||
+#if SKIP_FORKING_ON_READ_ONLY
+              os->readOnly /* readOnly arrays are likely to be lookup-table */ ||
+#endif
+              !forkOnRange(state, offset, 0, mo->size - bytes, forks, ForkOnSymAddrThreshold)) {
+
+              ref<Expr> result = os->read(offset, type);
+              bindLocal(target, *bound, result);
+          } else {
+              for (auto &it : forks) {
+                  ref<Expr> result = os->read(it.first, type);
+                  bindLocal(target, *it.second, result);
+              }
+          }
       }
     }
 

@@ -46,6 +46,16 @@ if (NOT EXISTS "${LLVM_DIS_TOOL}")
     "The llvm-dis tool cannot be found at \"${LLVM_DIS_TOOL}\"")
 endif()
 
+# Extend native compiler invocation on macOS to point to the currently selected systems directory
+set(BC_EXTRA_FLAGS "")
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  execute_process(
+          COMMAND xcrun --sdk macosx --show-sdk-path
+          OUTPUT_VARIABLE MAC_OS_SDK_PATH
+          OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(BC_EXTRA_FLAGS "-isysroot${MAC_OS_SDK_PATH}")
+endif()
+
 # Test compiler
 function(test_bitcode_compiler COMPILER SRC_EXT)
   message(STATUS "Testing bitcode compiler ${COMPILER}")
@@ -58,6 +68,7 @@ function(test_bitcode_compiler COMPILER SRC_EXT)
       "-c"
       "-emit-llvm"
       "-o" "${BC_FILE}"
+      "${BC_EXTRA_FLAGS}"
       "${SRC_FILE}"
     RESULT_VARIABLE COMPILE_INVOKE_EXIT_CODE
   )

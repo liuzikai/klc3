@@ -265,7 +265,11 @@ static bool EvaluateInputAST(const char *Filename,
                        << QC->Objects[i]->name
                        << "[";
             for (unsigned j = 0; j != QC->Objects[i]->size; ++j) {
-              llvm::outs() << (unsigned) result[i][j];
+                // NOTE: [liuzikai] support range size different than Int8 by combining bytes
+                unsigned wordSize = QC->Objects[i]->range / 8;
+                unsigned long long value = 0;
+                for (unsigned k = 0; k < wordSize; k++) value |= (result[i][j * wordSize + k] << (8U * k));
+              llvm::outs() << value;
               if (j + 1 != QC->Objects[i]->size)
                 llvm::outs() << ", ";
             }

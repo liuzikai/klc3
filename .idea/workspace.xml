@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" GENERATION_OPTIONS="-DLLVM_CONFIG_BINARY=/usr/local/opt/llvm/bin/llvm-config -DENABLE_SOLVER_STP=ON -DENABLE_SYSTEM_TESTS=ON -Wno-dev" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="22060e4c-1a3a-4b40-97ef-329f2b1e518b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE.TXT" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE.TXT" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake/compile_bitcode_library.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/cmake/compile_bitcode_library.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake/find_bitcode_compiler.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/cmake/find_bitcode_compiler.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/klee/Expr/ArrayCache.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/klee/Expr/ArrayCache.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/klee/Expr/Assignment.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/klee/Expr/Assignment.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/klee/Expr/Expr.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/klee/Expr/Expr.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/klee/Expr/ExprHashMap.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/klee/Expr/ExprHashMap.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/klee/Solver/SolverCmdLine.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/klee/Solver/SolverCmdLine.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/klee/Solver/SolverStats.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/klee/Solver/SolverStats.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Core/Executor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Core/Executor.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Core/Executor.h" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Core/Executor.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Core/StatsTracker.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Core/StatsTracker.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Expr/ArrayExprOptimizer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Expr/ArrayExprOptimizer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Expr/Assignment.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Expr/Assignment.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Expr/AssignmentGenerator.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Expr/AssignmentGenerator.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Expr/Parser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Expr/Parser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Solver/CexCachingSolver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Solver/CexCachingSolver.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Solver/IndependentSolver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Solver/IndependentSolver.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Solver/STPBuilder.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Solver/STPBuilder.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Solver/STPSolver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Solver/STPSolver.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Solver/Solver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Solver/Solver.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Solver/SolverCmdLine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Solver/SolverCmdLine.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Solver/SolverStats.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Solver/SolverStats.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tools/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/kleaver/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tools/kleaver/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/klee-stats/klee-stats" beforeDir="false" afterPath="$PROJECT_DIR$/tools/klee-stats/klee-stats" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/klee/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tools/klee/main.cpp" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="5719d2803e93252e5d4613f43afc7db0d72332f1" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+  </component>
+  <component name="ProjectId" id="1xUMXwDLiGmKMZ9gjNtL6IpN6mc" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="RunOnceActivity.cidr.known.project.marker" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="cf.first.check.clang-format" value="false" />
+    <property name="cidr.known.project.marker" value="true" />
+    <property name="cmake.loaded.for.project" value="true" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="22060e4c-1a3a-4b40-97ef-329f2b1e518b" name="Changes" comment="" />
+      <created>1630405258320</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1630405258320</updated>
+      <workItem from="1630405265224" duration="558000" />
+      <workItem from="1630405855303" duration="450000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+</project>

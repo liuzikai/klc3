@@ -50,10 +50,8 @@ bool Solver::mustBeTrue(const Query& query, bool &result) {
   assert(query.expr->getWidth() == Expr::Bool && "Invalid expression type!");
 
   // Maintain invariants implementations expect.
-  if (ConstantExpr *CE = dyn_cast<ConstantExpr>(query.expr)) {
-    result = CE->isTrue() ? true : false;
-    return true;
-  }
+  // NOTE: [liuzikai] is this a bug? When we want to verify that a set of constraints is satisfiable or not, we may
+  // supply false as query expression. In this case, we still want to go to the solver?
 
   return impl->computeTruth(query, result);
 }

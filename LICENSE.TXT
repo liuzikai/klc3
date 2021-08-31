@@ -1,5 +1,5 @@
 ==============================================================================
-KLEE Release License
+KLEE/KLC3 Release License
 ==============================================================================
 University of Illinois/NCSA
 Open Source License
@@ -24,6 +24,17 @@ Improved and extended since 2009 by many developers.  For a full list
 of contributors, refer to
          https://github.com/klee/klee/graphs/contributors
 and the Git commit history.
+
+
+KLC3 is extended based on KLEE since 2020 by:
+    Zikai Liu
+
+Assignments and LC-3 code in the KLC3 user manual (klc3-manual) are written by
+individual instructors and/or students.
+
+The LC-3 tools package is integrated as parts of KLC3 (tools/lc3tools_release
+and lib/klc3/Loader/Lexer.f), which have additional or alternate copyrights,
+licenses, and/or restrictions.
 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of

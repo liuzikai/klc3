@@ -3,14 +3,14 @@ FROM klee/gtest:1.7.0_ubuntu_bionic-20200807 as gtest_base
 FROM klee/uclibc:klee_uclibc_v1.2_90_ubuntu_bionic-20200807 as uclibc_base
 FROM klee/tcmalloc:2.7_ubuntu_bionic-20200807 as tcmalloc_base
 FROM klee/stp:2.3.3_ubuntu_bionic-20200807 as stp_base
-FROM klee/z3:4.8.4_ubuntu_bionic-20200807 as z3_base
+# FROM klee/z3:4.8.4_ubuntu_bionic-20200807 as z3_base
 FROM klee/libcxx:90_ubuntu_bionic-20200807 as libcxx_base
 FROM llvm_base as intermediate
 COPY --from=gtest_base /tmp /tmp/
 COPY --from=uclibc_base /tmp /tmp/
 COPY --from=tcmalloc_base /tmp /tmp/
 COPY --from=stp_base /tmp /tmp/
-COPY --from=z3_base /tmp /tmp/
+# COPY --from=z3_base /tmp /tmp/
 COPY --from=libcxx_base /tmp /tmp/
 ENV COVERAGE=0
 ENV USE_TCMALLOC=1
@@ -21,14 +21,15 @@ ENV ENABLE_OPTIMIZED=1
 ENV ENABLE_DEBUG=1
 ENV DISABLE_ASSERTIONS=0
 ENV REQUIRES_RTTI=0
-ENV SOLVERS=STP:Z3
+# ENV SOLVERS=STP:Z3
+ENV SOLVERS=STP
 ENV GTEST_VERSION=1.7.0
 ENV UCLIBC_VERSION=klee_uclibc_v1.2
 ENV TCMALLOC_VERSION=2.7
 ENV SANITIZER_BUILD=
 ENV STP_VERSION=2.3.3
 ENV MINISAT_VERSION=master
-ENV Z3_VERSION=4.8.4
+# ENV Z3_VERSION=4.8.4
 ENV USE_LIBCXX=1
 ENV KLEE_RUNTIME_BUILD="Debug+Asserts"
 LABEL maintainer="KLEE Developers"
@@ -37,7 +38,7 @@ LABEL maintainer="KLEE Developers"
 # TODO remove adding sudo package
 # Create ``klee`` user for container with password ``klee``.
 # and give it password-less sudo access (temporarily so we can use the CI scripts)
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt -y --no-install-recommends install sudo emacs-nox vim-nox file python3-dateutil doxygen && \
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt -y --no-install-recommends install sudo emacs-nox vim-nox file python3-dateutil doxygen libgraphviz-dev flex libfl-dev && \
     rm -rf /var/lib/apt/lists/* && \
     useradd -m klee && \
     echo klee:klee | chpasswd && \

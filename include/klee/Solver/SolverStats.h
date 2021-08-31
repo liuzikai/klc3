@@ -26,7 +26,17 @@ namespace stats {
   extern Statistic queryConstructs;
   extern Statistic queryCounterexamples;
   extern Statistic queryTime;
-  
+
+  // Note: [liuzikai] add some statistics for IndependentSolver
+  extern Statistic independentSolverTime;
+  extern Statistic independentSolverQueries;
+  extern Statistic getIndependentConstraintsTime;
+  extern Statistic independentElementSetCacheHits;
+  extern Statistic independentElementSetCacheMisses;
+  extern size_t independentElementSetCacheSize;
+  extern Statistic independentElementSetCacheLookupTime;
+  extern Statistic independentElementSetConstructTime;
+
 #ifdef KLEE_ARRAY_DEBUG
   extern Statistic arrayHashTime;
 #endif

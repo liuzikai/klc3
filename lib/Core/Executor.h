@@ -337,6 +337,19 @@ private:
                               ref<Expr> value /* undef if read */,
                               KInstruction *target /* undef if write */);
 
+    bool forkOnRange(ExecutionState &state, const ref<Expr> &value, unsigned int minVal, unsigned int maxValue,
+                     std::vector<std::pair<ref<klee::ConstantExpr>, ExecutionState *>> &result,
+                     int maxPossibleValueCount);
+
+    bool evalPossibleValues(const ref<Expr> &expr, ExecutionState &state,
+                            std::vector<std::pair<ref<klee::ConstantExpr>, ref<Expr>>> &result,
+                            int maxPossibleValueCount);
+
+    bool evalPossibleValuesInRange(const ref<Expr> &expr, ExecutionState &state,
+                                   uint64_t minVal, uint64_t maxVal,
+                                   std::vector<std::pair<ref<klee::ConstantExpr>, ref<Expr>>> &result,
+                                   int maxPossibleValueCount);
+
   void executeMakeSymbolic(ExecutionState &state, const MemoryObject *mo,
                            const std::string &name);
 

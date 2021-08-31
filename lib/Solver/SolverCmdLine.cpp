@@ -131,6 +131,31 @@ void KCommandLine::HideOptions(llvm::cl::OptionCategory &Category) {
   }
 }
 
+// NOTE: [liuzikai] added
+void KCommandLine::HideAllOptions() {
+    for (auto &elem : cl::getRegisteredOptions()) {
+        elem.second->setHiddenFlag(cl::Hidden);
+    }
+}
+
+// NOTE: [liuzikai] added
+void KCommandLine::ShowOptions(llvm::cl::OptionCategory &Category) {
+  StringMap<cl::Option *> &map = cl::getRegisteredOptions();
+
+  for (auto &elem : map) {
+#if LLVM_VERSION_CODE >= LLVM_VERSION(9, 0)
+    for (auto &cat : elem.second->Categories) {
+#else
+    {
+      auto &cat = elem.second->Category;
+#endif
+      if (cat == &Category) {
+        elem.second->setHiddenFlag(cl::NotHidden);
+      }
+    }
+  }
+}
+
 #ifdef ENABLE_METASMT
 
 #ifdef METASMT_DEFAULT_BACKEND_IS_BTOR

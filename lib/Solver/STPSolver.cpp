@@ -194,12 +194,18 @@ runAndGetCex(::VC vc, STPBuilder *builder, ::VCExpr q,
   values.reserve(objects.size());
   unsigned i = 0; // FIXME C++17: use reference from emplace_back()
   for (const auto object : objects) {
-    values.emplace_back(object->size);
+      // NOTE: [liuzikai] support Int16 range size by split result into bytes
+      assert(object->range >= Expr::Int8 && object->range <= Expr::Int64 && "Unsupported array range");
+      unsigned wordSize = object->range / 8;
+    values.emplace_back(object->size * wordSize);
 
     for (unsigned offset = 0; offset < object->size; offset++) {
       ExprHandle counter =
           vc_getCounterExample(vc, builder->getInitialRead(object, offset));
-      values[i][offset] = static_cast<unsigned char>(getBVUnsigned(counter));
+        unsigned long long value = getBVUnsignedLongLong(counter);
+        for (unsigned j = 0; j < wordSize; j++) {
+            values[i][offset * wordSize + j] = static_cast<unsigned char>((value >> (8U * j)) & 0xFF);
+        }
     }
     ++i;
   }
@@ -246,7 +252,12 @@ runAndGetCexForked(::VC vc, STPBuilder *builder, ::VCExpr q,
         for (unsigned offset = 0; offset < object->size; offset++) {
           ExprHandle counter =
               vc_getCounterExample(vc, builder->getInitialRead(object, offset));
-          *pos++ = static_cast<unsigned char>(getBVUnsigned(counter));
+            // NOTE: [liuzikai] support Int16 range size by split result into bytes
+          // *pos++ = static_cast<unsigned char>(getBVUnsigned(counter));
+            unsigned long long value = getBVUnsignedLongLong(counter);
+            for (unsigned j = 0; j < object->range / 8; j++) {
+                *pos++ = static_cast<unsigned char>((value >> (8U * j)) & 0xFF);
+            }
         }
       }
     }
@@ -287,8 +298,9 @@ runAndGetCexForked(::VC vc, STPBuilder *builder, ::VCExpr q,
 
       values.reserve(objects.size());
       for (const auto object : objects) {
-        values.emplace_back(pos, pos + object->size);
-        pos += object->size;
+          // NOTE: [liuzikai] support Int16 range size by split result into bytes
+        values.emplace_back(pos, pos + (object->size * (object->range / 8)));
+        pos += object->size * (object->range / 8);
       }
 
       return SolverImpl::SOLVER_RUN_STATUS_SUCCESS_SOLVABLE;

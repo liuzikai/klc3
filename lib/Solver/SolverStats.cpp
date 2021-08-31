@@ -23,6 +23,16 @@ Statistic stats::queryConstructs("QueryConstructs", "QB");
 Statistic stats::queryCounterexamples("QueriesCEX", "Qcex");
 Statistic stats::queryTime("QueryTime", "Qtime");
 
+// Note: [liuzikai] add some statistics for IndependentSolver
+Statistic stats::independentSolverTime("IndependentSolverTime", "ISTime");
+Statistic stats::independentSolverQueries("IndependentSolverQueries", "ISQueries");
+Statistic stats::getIndependentConstraintsTime("GetIndependentConstraintsTime", "ICTime");
+Statistic stats::independentElementSetCacheHits("IndependentElementSetCacheHits", "IEHits");
+Statistic stats::independentElementSetCacheMisses("IndependentElementSetCacheMisses", "IEMiss");
+size_t stats::independentElementSetCacheSize = 0;
+Statistic stats::independentElementSetCacheLookupTime("IndependentElementSetCacheLookupTime", "IELTime");
+Statistic stats::independentElementSetConstructTime("IndependentElementSetConstructTime", "IECTime");
+
 #ifdef KLEE_ARRAY_DEBUG
 Statistic stats::arrayHashTime("ArrayHashTime", "AHtime");
 #endif

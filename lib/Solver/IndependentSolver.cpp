@@ -6,6 +6,10 @@
 // License. See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
+#define ENABLE_INDEP_ELEM_CACHE            1
+#define INDEP_ELEM_CACHE_USE_RAW_PTR_COMP  1
+#define INDEP_ELEM_CACHE_CLEAR_THRESHOLD   1000000  /* 0 for never clear */
+#define ENABLE_INDEP_SOLVER_TIMER          0
 
 #define DEBUG_TYPE "independent-solver"
 #include "klee/Solver/Solver.h"
@@ -23,6 +27,11 @@
 #include <map>
 #include <ostream>
 #include <vector>
+#include <klee/Support/ErrorHandling.h>
+
+// NOTE: [liuzikai] add IndependentSolver stats
+#include "klee/Solver/SolverStats.h"
+#include "klee/Statistics/TimerStatIncrementer.h"
 
 using namespace klee;
 using namespace llvm;
@@ -56,7 +65,8 @@ public:
     return modified;
   }
 
-  bool intersects(const DenseSet &b) {
+  // NOTE: [liuzikai] add const modifier
+  bool intersects(const DenseSet &b) const {
     for (typename set_ty::iterator it = s.begin(), ie = s.end(); 
          it != ie; ++it)
       if (b.s.count(*it))
@@ -181,8 +191,9 @@ public:
     os << "}";
   }
 
+  // NOTE: [liuzikai] add const modifier
   // more efficient when this is the smaller set
-  bool intersects(const IndependentElementSet &b) {
+  bool intersects(const IndependentElementSet &b) const {
     // If there are any symbolic arrays in our query that b accesses
     for (std::set<const Array*>::iterator it = wholeObjects.begin(), 
            ie = wholeObjects.end(); it != ie; ++it) {
@@ -191,7 +202,7 @@ public:
           b.elements.find(array) != b.elements.end())
         return true;
     }
-    for (elements_ty::iterator it = elements.begin(), ie = elements.end();
+    for (elements_ty::const_iterator it = elements.begin(), ie = elements.end();
          it != ie; ++it) {
       const Array *array = it->first;
       // if the array we access is symbolic in b
@@ -320,22 +331,85 @@ getAllIndependentConstraintsSets(const Query &query) {
 static 
 IndependentElementSet getIndependentConstraints(const Query& query,
                                                 std::vector< ref<Expr> > &result) {
-  IndependentElementSet eltsClosure(query.expr);
-  std::vector< std::pair<ref<Expr>, IndependentElementSet> > worklist;
+#if ENABLE_INDEP_SOLVER_TIMER
+  // NOTE: [liuzikai] add getIndependentConstraints timer
+  TimerStatIncrementer t(stats::getIndependentConstraintsTime);
+#endif
 
+#if ENABLE_INDEP_ELEM_CACHE
+    // NOTE: [liuzikai] add cache for IndependentElementSets and reduce copying
+#if INDEP_ELEM_CACHE_USE_RAW_PTR_COMP
+    static ExprHashRawPtrMap<IndependentElementSet> caches;
+#else
+    static ExprHashMap<IndependentElementSet> caches;
+#endif
+
+#if INDEP_ELEM_CACHE_CLEAR_THRESHOLD
+    if (caches.size() > INDEP_ELEM_CACHE_CLEAR_THRESHOLD) {
+        klee_warning("Clear IndependentElementSet cache due to large size");
+        caches.clear();  // recycle and reconstruct
+    }
+#endif
+    stats::independentElementSetCacheSize = caches.size();
+
+#endif
+  IndependentElementSet eltsClosure(query.expr);
+#if ENABLE_INDEP_ELEM_CACHE
+  std::vector< std::pair<ref<Expr>, const IndependentElementSet *> > worklist;  // hold IndependentElementSet pointers
+#else
+  std::vector< std::pair<ref<Expr>, IndependentElementSet> > worklist;
+#endif
+
+#if ENABLE_INDEP_ELEM_CACHE
+    for (const auto &constraint : query.constraints) {
+#if INDEP_ELEM_CACHE_USE_RAW_PTR_COMP
+      ExprHashRawPtrMap<IndependentElementSet>::iterator it2;
+#else
+      ExprHashMap<IndependentElementSet>::iterator it2;
+#endif
+      {
+/*#if ENABLE_INDEP_SOLVER_TIMER
+          TimerStatIncrementer t2(stats::independentElementSetCacheLookupTime);
+#endif*/
+          it2 = caches.find(constraint);
+      }
+      if (it2 == caches.end()) {
+          {
+/*#if ENABLE_INDEP_SOLVER_TIMER
+              TimerStatIncrementer t3(stats::independentElementSetConstructTime);
+#endif*/
+              it2 = caches.emplace(constraint, IndependentElementSet(constraint)).first;
+          }
+          ++stats::independentElementSetCacheMisses;
+      } else {
+          ++stats::independentElementSetCacheHits;
+      }
+      worklist.emplace_back(constraint, &it2->second);
+      // unordered_map's pointers are stable
+  }
+#else
   for (const auto &constraint : query.constraints)
     worklist.push_back(
         std::make_pair(constraint, IndependentElementSet(constraint)));
+#endif
 
   // XXX This should be more efficient (in terms of low level copy stuff).
   bool done = false;
   do {
     done = true;
+#if ENABLE_INDEP_ELEM_CACHE
+    std::vector< std::pair<ref<Expr>, const IndependentElementSet*> > newWorklist;
+    for (std::vector< std::pair<ref<Expr>, const IndependentElementSet*> >::iterator
+           it = worklist.begin(), ie = worklist.end(); it != ie; ++it) {
+      if (it->second->intersects(eltsClosure)) {
+        if (eltsClosure.add(*it->second))
+#else
     std::vector< std::pair<ref<Expr>, IndependentElementSet> > newWorklist;
     for (std::vector< std::pair<ref<Expr>, IndependentElementSet> >::iterator
            it = worklist.begin(), ie = worklist.end(); it != ie; ++it) {
       if (it->second.intersects(eltsClosure)) {
         if (eltsClosure.add(it->second))
+#endif
           done = false;
         result.push_back(it->first);
         // Means that we have added (z=y)added to (x=y)
@@ -409,6 +483,12 @@ public:
   
 bool IndependentSolver::computeValidity(const Query& query,
                                         Solver::Validity &result) {
+    ++stats::independentSolverQueries;
+#if ENABLE_INDEP_SOLVER_TIMER
+  // NOTE: [liuzikai] add IndependentSolver timer
+  TimerStatIncrementer t(stats::independentSolverTime);
+#endif
+
   std::vector< ref<Expr> > required;
   IndependentElementSet eltsClosure =
     getIndependentConstraints(query, required);
@@ -418,6 +498,12 @@ bool IndependentSolver::computeValidity(const Query& query,
 }
 
 bool IndependentSolver::computeTruth(const Query& query, bool &isValid) {
+    ++stats::independentSolverQueries;
+#if ENABLE_INDEP_SOLVER_TIMER
+  // NOTE: [liuzikai] add IndependentSolver timer
+  TimerStatIncrementer t(stats::independentSolverTime);
+#endif
+
   std::vector< ref<Expr> > required;
   IndependentElementSet eltsClosure = 
     getIndependentConstraints(query, required);
@@ -427,6 +513,12 @@ bool IndependentSolver::computeTruth(const Query& query, bool &isValid) {
 }
 
 bool IndependentSolver::computeValue(const Query& query, ref<Expr> &result) {
+    ++stats::independentSolverQueries;
+#if ENABLE_INDEP_SOLVER_TIMER
+  // NOTE: [liuzikai] add IndependentSolver timer
+  TimerStatIncrementer t(stats::independentSolverTime);
+#endif
+
   std::vector< ref<Expr> > required;
   IndependentElementSet eltsClosure = 
     getIndependentConstraints(query, required);
@@ -474,6 +566,12 @@ bool IndependentSolver::computeInitialValues(const Query& query,
                                              const std::vector<const Array*> &objects,
                                              std::vector< std::vector<unsigned char> > &values,
                                              bool &hasSolution){
+    ++stats::independentSolverQueries;
+#if ENABLE_INDEP_SOLVER_TIMER
+  // NOTE: [liuzikai] add IndependentSolver timer
+  TimerStatIncrementer t(stats::independentSolverTime);
+#endif
+
   // We assume the query has a solution except proven differently
   // This is important in case we don't have any constraints but
   // we need initial values for requested array objects.
@@ -518,7 +616,10 @@ bool IndependentSolver::computeInitialValues(const Query& query,
           ::DenseSet<unsigned> * ds = &(it->elements[arraysInFactor[i]]);
           for (std::set<unsigned>::iterator it2 = ds->begin(); it2 != ds->end(); it2++){
             unsigned index = * it2;
-            (* tempPtr)[index] = tempValues[i][index];
+              // NOTE: [liuzikai] support range size different than Int8 by combining bytes
+              unsigned wordSize = arraysInFactor[i]->range / 8;
+              for (unsigned k = 0; k < wordSize; k++) (* tempPtr)[index * wordSize + k] = tempValues[i][index * wordSize + k];
+
           }
         } else {
           // Dump all the new values into the array
@@ -534,13 +635,15 @@ bool IndependentSolver::computeInitialValues(const Query& query,
       // this means we have an array that is somehow related to the
       // constraint, but whose values aren't actually required to
       // satisfy the query.
-      std::vector<unsigned char> ret(arr->size);
+        // NOTE: [liuzikai] support range size different than Int8
+      std::vector<unsigned char> ret(arr->size * (arr->getRange() / 8));
       values.push_back(ret);
     } else {
       values.push_back(retMap[arr]);
     }
   }
-  assert(assertCreatedPointEvaluatesToTrue(query, objects, values, retMap) && "should satisfy the equation");
+  // NOTE: [liuzikai] this assertion doesn't work when array range is not Int8 (with revised STPSolver runAndGetCex)
+//  assert(assertCreatedPointEvaluatesToTrue(query, objects, values, retMap) && "should satisfy the equation");
   delete factors;
   return true;
 }

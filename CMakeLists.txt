@@ -476,7 +476,7 @@ set(available_klee_runtime_build_types
 if (NOT KLEE_RUNTIME_BUILD_TYPE)
   message(STATUS "KLEE_RUNTIME_BUILD_TYPE is not set. Setting default")
   message(STATUS "The available runtime build types are: ${available_klee_runtime_build_types}")
-  set(KLEE_RUNTIME_BUILD_TYPE "Debug+Asserts" CACHE String
+  set(KLEE_RUNTIME_BUILD_TYPE "Debug+Asserts" CACHE STRING
     "Options are ${available_klee_runtime_build_types}"
     FORCE)
 endif()
@@ -808,6 +808,7 @@ endif()
 if (ENABLE_SYSTEM_TESTS)
   message(STATUS "System tests enabled")
   add_subdirectory(test)
+  add_subdirectory(test-klc3)
   add_dependencies(check systemtests)
 else()
   message(STATUS "System tests disabled")

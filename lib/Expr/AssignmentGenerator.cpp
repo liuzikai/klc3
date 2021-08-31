@@ -193,6 +193,9 @@ bool AssignmentGenerator::helperGenerateAssignment(const ref<Expr> &e,
     if (isa<ConstantExpr>(re.index)) {
       if (re.updates.root->isSymbolicArray()) {
         ConstantExpr &index = static_cast<ConstantExpr &>(*re.index.get());
+        // NOTE: [liuzikai] not sure whether this function support domain other than Int32 and range other than Int8.
+        // For safety, I place an assert here. If it get triggered, tell me
+        assert(index.getWidth() == Expr::Int32 && "Triggering getIndexedValue(). See comment here [liuzikai]");
         std::vector<unsigned char> c_value =
             getIndexedValue(getByteValue(val), index, re.updates.root->size);
         if (c_value.size() == 0) {

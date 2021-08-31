@@ -59,6 +59,13 @@ public:
                            Expr::Width _domain = Expr::Int32,
                            Expr::Width _range = Expr::Int8);
 
+  // NOTE: [liuzikai] add interface to get all Arrays
+  std::vector<const Array *> getAllSymbolicArrays() const {
+      return {cachedSymbolicArrays.begin(), cachedSymbolicArrays.end()};
+  }
+
+  bool hasSymbolicArray() const { return !cachedSymbolicArrays.empty(); }
+
 private:
   typedef std::unordered_set<const Array *, klee::ArrayHashFn,
                              klee::EquivArrayCmpFn>

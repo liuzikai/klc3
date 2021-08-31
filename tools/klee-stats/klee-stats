@@ -28,7 +28,8 @@ Legend = [
     ('BCov(%)', 'branch coverage in the LLVM bitcode (%)', "BCov"),
     ('ICount', 'total static instructions in the LLVM bitcode', "ICount"),
     ('TSolver(s)', 'time spent in the constraint solver', "SolverTime"),
-    ('TSolver(%)', 'time spent in the constraint solver', "RelSolverTime"),
+    ('TQueries(s)', 'time spent in the STP solver', "QueryTime"),
+    ('TSolver(%)', 'time spent in the constraint solver wrt wall time', "RelSolverTime"),
     ('States', 'number of currently active states', "NumStates"),
     ('MaxStates', 'maximum number of active states', "maxStates"),
     ('AvgStates', 'average number of active states', "avgStates"),
@@ -38,13 +39,20 @@ Legend = [
     ('Queries', 'number of queries issued to STP', "NumQueries"),
     ('AvgQC', 'average number of query constructs per query', "AvgQC"),
     ('Tcex(s)', 'time spent in the counterexample caching code', "CexCacheTime"),
-    ('Tcex(%)', 'relative time spent in the counterexample caching code wrt wall time', "CexCacheTime"),
+    ('Tcex(%)', 'relative time spent in the counterexample caching code wrt wall time', "RelCexCacheTime"),
     ('Tfork(s)', 'time spent forking', "ForkTime"),
-    ('Tfork(%)', 'relative time spent forking wrt wall time', "ForkTime"),
+    ('Tfork(%)', 'relative time spent forking wrt wall time', "RelForkTime"),
     ('TResolve(s)', 'time spent in object resolution', "ResolveTime"),
-    ('TResolve(%)', 'time spent in object resolution wrt wall time', "ResolveTime"),
-    ('QCexCMisses', 'Counterexample cache misses', "QueryCexCacheMisses"),
+    ('TResolve(%)', 'time spent in object resolution wrt wall time', "RelResolveTime"),
     ('QCexCHits', 'Counterexample cache hits', "QueryCexCacheHits"),
+    ('QCexCMisses', 'Counterexample cache misses', "QueryCexCacheMisses"),
+    ('TIndSolver(s)', 'time spent in the independent solver', "IndependentSolverTime"),
+    ('TIndSolver(%)', 'time spent in the independent solver wrt wall time', "RelIndependentSolverTime"),
+    ('QIndSolver', 'number of queries issued to the independent solver', "IndependentSolverQueries"),
+    ('TGetIndCon(s)', 'time spent in getIndependentConstraints()', "GetIndependentConstraintsTime"),
+    ('TGetIndCon(%)', 'time spent in getIndependentConstraints() wrt wall time', "RelGetIndependentConstraintsTime"),
+    ('QIndElemSetCacheHits', 'IndependentElementSet cache hits', "IndependentElementSetCacheHits"),
+    ('QIndElemSetCacheMisses', 'IndependentElementSet cache misses', "IndependentElementSetCacheMisses"),
 ]
 
 def getInfoFile(path):
@@ -144,7 +152,7 @@ def add_artificial_columns(record):
         record["NumBranches"] = 1
 
     # Convert recorded times from microseconds to seconds
-    for key in ["UserTime", "WallTime", "QueryTime", "SolverTime", "CexCacheTime", "ForkTime", "ResolveTime"]:
+    for key in ["UserTime", "WallTime", "QueryTime", "SolverTime", "CexCacheTime", "ForkTime", "ResolveTime", "IndependentSolverTime", "GetIndependentConstraintsTime"]:
         if not key in record:
             continue
         record[key] /= 1000000
@@ -170,7 +178,7 @@ def add_artificial_columns(record):
         record["BCov"] = 100 * ( 2 * record["FullBranches"] + record["PartialBranches"]) / ( 2 * record["NumBranches"])
 
     # Add relative times
-    for key in ["SolverTime", "CexCacheTime", "ForkTime", "ResolveTime", "UserTime"]:
+    for key in ["SolverTime", "CexCacheTime", "ForkTime", "ResolveTime", "UserTime", "IndependentSolverTime", "GetIndependentConstraintsTime"]:
         if "WallTime" in record and key in record:
             record["Rel"+key] = 100 * record[key] / record["WallTime"]
 

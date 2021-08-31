@@ -360,7 +360,8 @@ CexCachingSolver::computeInitialValues(const Query& query,
     Assignment::bindings_ty::iterator it = a->bindings.find(os);
     
     if (it == a->bindings.end()) {
-      values[i] = std::vector<unsigned char>(os->size, 0);
+        // NOTE: [liuzikai] revised for range other than Int8
+      values[i] = std::vector<unsigned char>(os->size * (os->getRange() / 8), 0);
     } else {
       values[i] = it->second;
     }

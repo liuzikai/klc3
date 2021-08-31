@@ -85,6 +85,14 @@ public:
   /// Hide all options in the specified category
   static void HideOptions(llvm::cl::OptionCategory &Category);
 
+  // NOTE: [liuzikai] added
+  /// Hide all options
+  static void HideAllOptions();
+
+  // NOTE: [liuzikai] added
+  /// Show a specific category
+  static void ShowOptions(llvm::cl::OptionCategory &Category);
+
   /// Hide all options except the ones in the specified category
   static void HideUnrelatedOptions(llvm::cl::OptionCategory &Category);
 };

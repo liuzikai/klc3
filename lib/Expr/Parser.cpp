@@ -495,14 +495,16 @@ DeclResult ParserImpl::ParseArrayDecl() {
 
   // FIXME: Validate that size makes sense for domain type.
 
-  if (DomainType.get() != Expr::Int32) {
-    Error("array domain must currently be w32.");
+  // NOTE: [liuzikai] Int16 domain and range support has been added for STP impl
+
+  if (DomainType.get() != Expr::Int32 && DomainType.get() != Expr::Int16) {
+    Error("array domain must currently be w32 or w16.");
     DomainType = Expr::Int32;
     Values.clear();
   }
 
-  if (RangeType.get() != Expr::Int8) {
-    Error("array domain must currently be w8.");
+  if (RangeType.get() != Expr::Int8 && RangeType.get() != Expr::Int16) {
+    Error("array domain must currently be w8 or w16.");
     RangeType = Expr::Int8;
     Values.clear();
   }
@@ -510,21 +512,25 @@ DeclResult ParserImpl::ParseArrayDecl() {
   // FIXME: Validate that this array is undeclared.
 
  exit:
-  if (!Size.isValid())
+    // NOTE: [liuzikai] these seems to be unused yet
+
+  /*if (!Size.isValid())
     Size = 1;
   if (!DomainType.isValid())
     DomainType = 32;
   if (!RangeType.isValid())
-    RangeType = 8;
+    RangeType = 8;*/
 
   // FIXME: Array should take domain and range.
+  // NOTE: [liuzikai] take domain and range
   const Identifier *Label = GetOrCreateIdentifier(Name);
   const Array *Root;
   if (!Values.empty())
     Root = TheArrayCache.CreateArray(Label->Name, Size.get(), &Values[0],
-                                     &Values[0] + Values.size());
+                                     &Values[0] + Values.size(),
+                                     DomainType.get(), RangeType.get());
   else
-    Root = TheArrayCache.CreateArray(Label->Name, Size.get());
+    Root = TheArrayCache.CreateArray(Label->Name, Size.get(), 0, 0, DomainType.get(), RangeType.get());
   ArrayDecl *AD = new ArrayDecl(Label, Size.get(), 
                                 DomainType.get(), RangeType.get(), Root);
 
@@ -1234,8 +1240,12 @@ ExprResult ParserImpl::ParseAnyReadParenExpr(const Token &Name,
 
   // FIXME: Need generic way to get array width. Needs to work with
   // anonymous arrays.
-  Expr::Width ArrayDomainType = Expr::Int32;
-  Expr::Width ArrayRangeType = Expr::Int8;
+  /*Expr::Width ArrayDomainType = Expr::Int32;
+  Expr::Width ArrayRangeType = Expr::Int8;*/
+
+    // NOTE: [liuzikai] Int16 domain and range support has been added for STP impl
+    Expr::Width ArrayDomainType = Array.get().root->domain;
+    Expr::Width ArrayRangeType = Array.get().root->range;
 
   // Coerce number to correct type.
   ExprResult IndexExpr;
@@ -1387,8 +1397,12 @@ VersionResult ParserImpl::ParseVersion() {
 
   Base = BaseRes.get();
 
-  Expr::Width ArrayDomainType = Expr::Int32;
-  Expr::Width ArrayRangeType = Expr::Int8;
+  /*Expr::Width ArrayDomainType = Expr::Int32;
+  Expr::Width ArrayRangeType = Expr::Int8;*/
+
+    // NOTE: [liuzikai] Int16 domain and range support has been added for STP impl
+    Expr::Width ArrayDomainType = BaseRes.get().root->domain;
+    Expr::Width ArrayRangeType = BaseRes.get().root->range;
 
   for (std::vector<WriteInfo>::reverse_iterator it = Writes.rbegin(), 
          ie = Writes.rend(); it != ie; ++it) {

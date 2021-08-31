@@ -460,7 +460,13 @@ void StatsTracker::writeStatsHeader() {
              << "ResolveTime INTEGER,"
              << "QueryCexCacheMisses INTEGER,"
              << "QueryCexCacheHits INTEGER,"
-             << "ArrayHashTime INTEGER"
+             << "ArrayHashTime INTEGER,"
+             // Note: [liuzikai] add statistics for IndependentSolver
+             << "IndependentSolverTime INTEGER,"
+             << "IndependentSolverQueries INTEGER,"
+             << "GetIndependentConstraintsTime INTEGER,"
+             << "IndependentElementSetCacheHits INTEGER,"
+             << "IndependentElementSetCacheMisses INTEGER"
          << ')';
   char *zErrMsg = nullptr;
   if(sqlite3_exec(statsFile, create.str().c_str(), nullptr, nullptr, &zErrMsg)) {
@@ -493,7 +499,13 @@ void StatsTracker::writeStatsHeader() {
              << "ResolveTime,"
              << "QueryCexCacheMisses,"
              << "QueryCexCacheHits,"
-             << "ArrayHashTime"
+             << "ArrayHashTime,"
+             // Note: [liuzikai] add statistics for IndependentSolver
+             << "IndependentSolverTime,"
+             << "IndependentSolverQueries,"
+             << "GetIndependentConstraintsTime,"
+             << "IndependentElementSetCacheHits,"
+             << "IndependentElementSetCacheMisses"
          << ") VALUES ("
              << "?,"
              << "?,"
@@ -510,6 +522,12 @@ void StatsTracker::writeStatsHeader() {
              << "?,"
              << "?,"
              << "?,"
+             << "?,"
+             << "?,"
+             << "?,"
+             << "?,"
+             << "?,"
+             // Note: [liuzikai] add statistics for IndependentSolver
              << "?,"
              << "?,"
              << "?,"
@@ -551,6 +569,14 @@ void StatsTracker::writeStatsLine() {
 #else
   sqlite3_bind_int64(insertStmt, 20, -1LL);
 #endif
+
+    // Note: [liuzikai] add statistics for IndependentSolver
+    sqlite3_bind_int64(insertStmt, 21, stats::independentSolverTime);
+    sqlite3_bind_int64(insertStmt, 22, stats::independentSolverQueries);
+    sqlite3_bind_int64(insertStmt, 23, stats::getIndependentConstraintsTime);
+    sqlite3_bind_int64(insertStmt, 24, stats::independentElementSetCacheHits);
+    sqlite3_bind_int64(insertStmt, 25, stats::independentElementSetCacheMisses);
+
   int errCode = sqlite3_step(insertStmt);
   if(errCode != SQLITE_DONE) klee_error("Error writing stats data: %s", sqlite3_errmsg(statsFile));
   sqlite3_reset(insertStmt);

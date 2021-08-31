@@ -17,13 +17,13 @@ function(compile_bitcode_library library_name source_files compile_cc_flags comp
         if("${source_file_type}" STREQUAL ".cpp")
             add_custom_command(
                     OUTPUT ${bc_file}
-                    COMMAND ${LLVMCXX} -c "-emit-llvm" ${compile_cxx_flags} "${source_file}" -o ${bc_file}
+                    COMMAND ${LLVMCXX} -c "-emit-llvm" ${compile_cxx_flags} "${BC_EXTRA_FLAGS}" "${source_file}" -o ${bc_file}
                     DEPENDS ${source_file}
             )
         else()
             add_custom_command(
                     OUTPUT ${bc_file}
-                    COMMAND ${LLVMCC} -c "-emit-llvm" ${compile_cc_flags} "${source_file}" -o ${bc_file}
+                    COMMAND ${LLVMCC} -c "-emit-llvm" ${compile_cc_flags} "${BC_EXTRA_FLAGS}" "${source_file}" -o ${bc_file}
                     DEPENDS ${source_file}
             )
         endif()

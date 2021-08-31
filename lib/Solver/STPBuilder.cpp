@@ -462,7 +462,8 @@ ExprHandle STPBuilder::constructSDivByConstant(ExprHandle expr_n, unsigned width
 }
 
 ExprHandle STPBuilder::getInitialRead(const Array *root, unsigned index) {
-  return vc_readExpr(vc, getInitialArray(root), bvConst32(32, index));
+    // NOTE: [liuzikai] revised to support domain range other than Int32
+  return vc_readExpr(vc, getInitialArray(root), vc_bvConstExprFromInt(vc, root->domain, index));
 }
 
 ::VCExpr STPBuilder::getArrayForUpdate(const Array *root, 
