@@ -17,20 +17,25 @@ the original targets.
 
 Using KLC3 with Docker is similar to that of KLEE: [KLEE's guide](https://klee.github.io/releases/docs/v2.2/docker/).
 
-Build the Docker image locally:
+To pull the Docker image from DockerHub:
+```
+docker pull liuzikai/klc3:latest
+```
+
+Alternatively, to build the Docker image locally:
 
 ```
-docker build -t klc3 .
+docker build -t liuzikai/klc3 .
 ```
 
 To create a temporary container:
 ```
-docker run --rm -ti --ulimit='stack=-1:-1' klc3
+docker run --rm -ti --ulimit='stack=-1:-1' liuzikai/klc3
 ```
 
 Alternatively, to create a persistent container:
 ```
-docker run -ti --name=my_first_klc3_container --ulimit='stack=-1:-1' klc3
+docker run -ti --name=my_first_klc3_container --ulimit='stack=-1:-1' liuzikai/klc3
 ```
 
 ### Build from Source
