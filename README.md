@@ -3,16 +3,16 @@ KLC3: KLEE on LC-3
 
 A symbolic execution engine to provide end-to-end feedback and specific test cases to students on their LC-3 programs.
 
-Currently, the engine supports the LC-3 ISA introduced in _Introduction To Computing Systems (2nd Edition)_ by Patt And Patel.
-
-=> Design ideas: Zikai Liu, "[Using Concolic Execution to Provide Automatic Feedback on LC-3 Programs](http://hdl.handle.net/2142/110284)," 2021.
+Currently, KLC3 supports the LC-3 ISA introduced in _Introduction To Computing Systems (2nd Edition)_ by Patt And Patel.
 
 => [KLC3 User Manual](klc3-manual)
 
-## Install
-KLC3 makes use of KLEE's build system with a few modifications. KLC3 is configured as a CMake target built alone with
-the original targets.
+=> Design ideas detailed in my Bachelor's thesis: Zikai Liu, "[Using Concolic Execution to Provide Automatic Feedback on LC-3 Programs](http://hdl.handle.net/2142/110284)," 2021.
 
+=> KLC3 is a part of our end-to-end automatic feedback system for LC-3 programs, which was presented at ASE 2021. For the replication package, please refer to this repo: [liuzikai/lc3-feedback-system-artifact](https://github.com/liuzikai/lc3-feedback-system-artifact)
+
+
+## Install
 ### Docker Image
 
 Using KLC3 with Docker is similar to that of KLEE: [KLEE's guide](https://klee.github.io/releases/docs/v2.2/docker/).
@@ -39,16 +39,19 @@ docker run -ti --name=my_first_klc3_container --ulimit='stack=-1:-1' liuzikai/kl
 ```
 
 ### Build from Source
-Please follow the KLEE build guide: [Building KLEE with LLVM 9](https://klee.github.io/releases/docs/v2.2/build-llvm9/), with the following modification:
-* Only STP solver is currently supported! KLC3 is using symbolic array with domain and range of `Int16`. We have done some modifications into KLEE's infrastructure but only for the STP solver.
-* Graphviz and Flex is required to generate control flow graphs: `sudo apt install libgraphviz-dev flex libfl-dev` (Ubuntu) or `brew install graphviz flex` (macOS).
+KLC3 makes use of KLEE's build system with a few modifications. KLC3 is configured as a CMake target built along with
+the original targets.
+
+Please follow the KLEE build guide: [Building KLEE with LLVM 9](https://klee.github.io/releases/docs/v2.2/build-llvm9/), with the following modifications:
+* Only **STP solver** is currently supported! KLC3 uses symbolic arrays with domain and range of `Int16`. We have done some modifications into KLEE's infrastructure but only for the STP solver currently.
+* Graphviz and Flex are required to generate control flow graphs: `sudo apt install libgraphviz-dev flex libfl-dev` (Ubuntu) or `brew install graphviz flex` (macOS).
 
 ## Examples in KLC3 User Manual
 
 KLC3 user manual contains a few examples, including LC-3 programs and wrappers.
 
 [`get_sign`](klc3-manual/examples/get_sign) is a simple example that illustrates the issue detection capability of KLC3.
-[`get_sign.asm`](klc3-manual/examples/get_sign/get_sign.asm) is an LC-3 programs that contains two trivial bugs, which
+[`get_sign.asm`](klc3-manual/examples/get_sign/get_sign.asm) is an LC-3 program that contains two trivial bugs, which
 are triggered depending on the sign of an input integer.
 
 The KLC3 output is in [`klc3-out-0`](klc3-manual/examples/get_sign/klc3-out-0). To run KLC3 yourself
@@ -65,9 +68,9 @@ of the code) written by us (we cannot provide student code).
 If no gold program is supplied, KLC3 only detects problems during the execution of the test program
 (execution issues in the [KLC3 manual](klc3-manual)).
 
-To enable the equivalence checking on output, memory, registers and/or the last executed instruction
+To enable the equivalence checking on output, memory, registers, and/or the last executed instruction
 (behavioral issues in the [KLC3 manual](klc3-manual)),
-KLC3 needs a gold program to run alone with a test program.
+KLC3 needs a gold program to run along with a test program.
 
 [MP1 from ECE220 FA20 ZJUI section](klc3-manual/examples/zjui_ece220_fa20/mp1) requires students to write two
 subroutines `PRINT_CENTERED` and `PRINT_SLOT`.
@@ -85,12 +88,12 @@ The default output directory is `klc3-out-*` under the same directory as the las
 the output directory is in `examples` subdirectory.
 
 [MP2](klc3-manual/examples/zjui_ece220_fa20/mp2) is a more complicated assignment.
-[Output of an buggy program](klc3-manual/examples/zjui_ece220_fa20/mp2/examples/klc3-out-buggy).
+[Output of a buggy program](klc3-manual/examples/zjui_ece220_fa20/mp2/examples/klc3-out-buggy).
 
 [MP3](klc3-manual/examples/zjui_ece220_fa20/mp3) is an even more complicated assignment. Executing KLC3 with the given
 input space typically takes 2 to 5 minutes.
 
-We also includes [MPs from ECE220 FA18 ZJUI section](klc3-manual/examples/zjui_ece220_fa18), which are slightly
+We also include [MPs from ECE220 FA18 ZJUI section](klc3-manual/examples/zjui_ece220_fa18), which are slightly
 different from those of FA20.
 
 ## Source Overview
